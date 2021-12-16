@@ -31,7 +31,6 @@ docker run --name jenkins-blueocean --rm --detach \
   --volume jenkins-data:/var/jenkins_home \
   --volume jenkins-docker-certs:/certs/client:ro \
   myjenkins-blueocean:1.1
-
 ```
 
 ### Start/Stop
@@ -45,6 +44,17 @@ docker stop jenkins-blueocean jenkins-docker
 ### Interact with docker in docker (dind) engine
 
 ```shell
-# This will show all jenkins jobs containers running inside dind engine
-docker exec -it jenkins-docker docker ps
+# First copy the certs for docker engine
+docker cp jenkins-docker:/certs/client $HOME/dind_certs/
+
+# Then create a docker context for dind engine
+docker context create jenkins-de --docker "host=tcp://localhost:2376,ca=$HOME/dind_certs/ca.pem,cert=$HOME/dind_certs/cert.pem,key=$HOME/dind_certs/key.pem"
+
+# Switch from your local docker engine to docker-in-docker engine
+docker context use jenkins-de
+docker ps
+
+# switch back to your local docker engine
+docker context use default
+docker ps
 ```
